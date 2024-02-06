@@ -16,3 +16,8 @@ The Cryptocurrency Wallet Manager is a command-line tool designed for users to p
 - __get-wallet-summary__ - Shows information about the wallet of the currently logged account, including current balance, which cryptocurrency they have in their wallet, as well as their quantity.
 - __get-wallet-overall-summary__ - Shows information about the overall winnings of the currently logged account.
 - __shutdown__ - Shuts the server down.
+
+### Future improvements:
+
+- add admin system
+- update api calls
