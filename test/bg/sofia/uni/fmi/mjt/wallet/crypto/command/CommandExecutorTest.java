@@ -2,6 +2,7 @@ package bg.sofia.uni.fmi.mjt.wallet.crypto.command;
 
 import bg.sofia.uni.fmi.mjt.wallet.crypto.account.Account;
 import bg.sofia.uni.fmi.mjt.wallet.crypto.database.Database;
+import bg.sofia.uni.fmi.mjt.wallet.crypto.exception.FailedRequestException;
 import bg.sofia.uni.fmi.mjt.wallet.crypto.response.ApiCall;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -211,7 +212,7 @@ public class CommandExecutorTest {
     }
 
     @Test
-    void testListOfferings() {
+    void testListOfferings() throws FailedRequestException {
         String testInput = "list-offerings";
         Account account = new Account("test1", "test");
 
@@ -235,7 +236,7 @@ public class CommandExecutorTest {
     }
 
     @Test
-    void testBuySuccessfully() {
+    void testBuySuccessfully() throws FailedRequestException {
         String testInput = "buy DUMMY 50";
         Account account = Account.fromCSV("test1;test;60.0");
 
@@ -256,7 +257,7 @@ public class CommandExecutorTest {
     }
 
     @Test
-    void testBuyForInvalidAmountOfMoney() {
+    void testBuyForInvalidAmountOfMoney() throws FailedRequestException {
         String testInput = "buy DUMMY -1";
         Account account = Account.fromCSV("test1;test;60.0");
 
@@ -277,7 +278,7 @@ public class CommandExecutorTest {
     }
 
     @Test
-    void testBuyForInvalidAsset() {
+    void testBuyForInvalidAsset() throws FailedRequestException {
         String testInput = "buy BUMPY 50";
         Account account = Account.fromCSV("test1;test;60.0");
 
@@ -298,7 +299,7 @@ public class CommandExecutorTest {
     }
 
     @Test
-    void testBuyWithInsufficientBalance() {
+    void testBuyWithInsufficientBalance() throws FailedRequestException {
         String testInput = "buy DUMMY 50";
         Account account = Account.fromCSV("test1;test;40.0");
 
@@ -346,7 +347,7 @@ public class CommandExecutorTest {
     }
 
     @Test
-    void testSellSuccessfully() {
+    void testSellSuccessfully() throws FailedRequestException {
         String testInput = "sell DUMMY";
         Account account = Account.fromCSV("test1;test;40.0;DUMMY;1;1");
 
@@ -394,7 +395,7 @@ public class CommandExecutorTest {
     }
 
     @Test
-    void testSellInvalidAsset() {
+    void testSellInvalidAsset() throws FailedRequestException {
         String testInput = "sell BUMPY";
         Account account = Account.fromCSV("test1;test;40.0;DUMMY;1;1");
 
@@ -415,7 +416,7 @@ public class CommandExecutorTest {
     }
 
     @Test
-    void testSellNonPossessedAsset() {
+    void testSellNonPossessedAsset() throws FailedRequestException {
         String testInput = "sell DUMMY";
         Account account = Account.fromCSV("test1;test;40.0");
 
@@ -465,7 +466,7 @@ public class CommandExecutorTest {
     }
 
     @Test
-    void testGetWalletOverallSummary() {
+    void testGetWalletOverallSummary() throws FailedRequestException {
         String testInput = "get-wallet-overall-summary";
         Account account = Account.fromCSV("test1;test;40.0;DUMMY;1000;1");
 

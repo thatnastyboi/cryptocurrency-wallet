@@ -3,6 +3,7 @@ package bg.sofia.uni.fmi.mjt.wallet.crypto.command;
 import bg.sofia.uni.fmi.mjt.wallet.crypto.account.Account;
 import bg.sofia.uni.fmi.mjt.wallet.crypto.database.Database;
 import bg.sofia.uni.fmi.mjt.wallet.crypto.database.ServerLogger;
+import bg.sofia.uni.fmi.mjt.wallet.crypto.exception.FailedRequestException;
 import bg.sofia.uni.fmi.mjt.wallet.crypto.response.ApiCall;
 
 import java.net.http.HttpClient;
@@ -176,7 +177,7 @@ public class CommandExecutor {
                 result.append(String.format("%-6s %10.4f", entry.getKey(), entry.getValue())).append(NEW_LINE);
             }
 
-        } catch (RuntimeException e) {
+        } catch (FailedRequestException e) {
             logger.logError(FAILED_REQUEST_MESSAGE, e.getStackTrace());
             return FAILED_REQUEST_MESSAGE;
         }
@@ -194,11 +195,19 @@ public class CommandExecutor {
 
         String cryptoCode = buyData[0];
         Double moneyAmount = Double.parseDouble(buyData[1]);
+        Map<String, Double> marketChart;
 
         if (moneyAmount <= 0) {
             return INVALID_MONEY_AMOUNT;
         }
-        if (!apiCall.getMarketChart().containsKey(cryptoCode)) {
+
+        try {
+            marketChart = apiCall.getMarketChart();
+        } catch (FailedRequestException e) {
+            return FAILED_REQUEST_MESSAGE;
+        }
+
+        if (!marketChart.containsKey(cryptoCode)) {
             return ASSET_DOES_NOT_EXIST;
         }
 
@@ -208,7 +217,7 @@ public class CommandExecutor {
             return INSUFFICIENT_BALANCE_MESSAGE;
         }
 
-        double pricePerOne = apiCall.getMarketChart().get(cryptoCode);
+        double pricePerOne = marketChart.get(cryptoCode);
         current.getWallet().buyCrypto(cryptoCode, moneyAmount, pricePerOne);
 
         return String.format(ASSET_PURCHASED_SUCCESSFULLY, cryptoCode, moneyAmount);
@@ -223,19 +232,23 @@ public class CommandExecutor {
         }
 
         String cryptoCode = sellData[0];
+        Map<String, Double> marketChart;
 
-        if (!apiCall.getMarketChart().containsKey(cryptoCode)) {
-            return ASSET_DOES_NOT_EXIST;
+        try {
+            marketChart = apiCall.getMarketChart();
+        } catch (FailedRequestException e) {
+            return FAILED_REQUEST_MESSAGE;
         }
 
         Account current = (Account) key.attachment();
-
+        if (!marketChart.containsKey(cryptoCode)) {
+            return ASSET_DOES_NOT_EXIST;
+        }
         if (!current.getWallet().getCryptoInWallet().containsKey(cryptoCode)) {
             return ASSET_NOT_IN_POSSESSION;
         }
 
-        double pricePerOne = apiCall.getMarketChart().get(cryptoCode);
-
+        double pricePerOne = marketChart.get(cryptoCode);
         double soldFor = current.getWallet().sellCrypto(cryptoCode, pricePerOne);
 
         return String.format(ASSET_SOLD_SUCCESSFULLY, cryptoCode, soldFor);
@@ -264,9 +277,16 @@ public class CommandExecutor {
 
         double moneyInCrypto = 0.0;
         double moneyDepositedInCrypto = 0.0;
+        Map<String, Double> marketChart;
+
+        try {
+            marketChart = apiCall.getMarketChart();
+        } catch (FailedRequestException e) {
+            return FAILED_REQUEST_MESSAGE;
+        }
 
         for (var entry : currentAccountCryptoMap.entrySet()) {
-            moneyInCrypto += (apiCall.getMarketChart().get(entry.getKey()) * (entry.getValue()));
+            moneyInCrypto += (marketChart.get(entry.getKey()) * (entry.getValue()));
         }
 
         for (var entry : currentAccountTotalDeposited.entrySet()) {

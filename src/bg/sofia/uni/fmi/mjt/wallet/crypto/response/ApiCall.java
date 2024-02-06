@@ -1,5 +1,6 @@
 package bg.sofia.uni.fmi.mjt.wallet.crypto.response;
 
+import bg.sofia.uni.fmi.mjt.wallet.crypto.exception.FailedRequestException;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -22,6 +23,8 @@ public class ApiCall {
     private static final int MAX_RESULTS = 50;
     private static final double MINIMUM_PRICE_FOR_ONE = 0.0001;
     private static final int MAXIMUM_PRICE_FOR_ONE = 100_000;
+    private static final int BAD_REQUEST_CODE = 400;
+    private static final int INTERNET_SERVER_ERROR_CODE = 500;
     private Map<String, Double> marketChart;
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
@@ -31,7 +34,7 @@ public class ApiCall {
         this.marketChart = new HashMap<>();
     }
 
-    public Map<String, Double> getMarketChart() {
+    public Map<String, Double> getMarketChart() throws FailedRequestException {
         if (marketChart.isEmpty()) {
             makeApiCall(new Query(apiKey));
         }
@@ -39,33 +42,52 @@ public class ApiCall {
         return marketChart;
     }
 
-    private void makeApiCall(Query query) {
+    private void makeApiCall(Query query) throws FailedRequestException {
         try {
             URI uriAll = query.constructUri();
 
             HttpRequest request = HttpRequest.newBuilder().uri(uriAll).build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
+            int responseCode = response.statusCode();
+
+            handleResponseCode(responseCode);
+
             JsonArray jsonArray = JsonParser.parseString(response.body()).getAsJsonArray();
 
-            int ctr = 0;
-            while (ctr < MAX_RESULTS) {
-                JsonObject current = jsonArray.get(++ctr).getAsJsonObject();
-                if (current.get("type_is_crypto").getAsInt() != 1 || !current.has("price_usd")
-                    || Double.compare(current.get("price_usd").getAsDouble(), MINIMUM_PRICE_FOR_ONE) < 0
-                    || Double.compare(current.get("price_usd").getAsDouble(), MAXIMUM_PRICE_FOR_ONE) > 0) {
-                    jsonArray.remove(ctr--);
-                    continue;
-                }
-
-                marketChart.put(current.get("asset_id").getAsString(),
-                    Double.valueOf(current.get("price_usd").getAsDouble()));
-            }
+            fetchMarketChart(jsonArray);
 
             scheduler.schedule(() -> scheduleApiDeletion(), MINUTES_OF_RESPONSE_VALIDITY, TimeUnit.MINUTES);
 
+        } catch (FailedRequestException e) {
+            throw new FailedRequestException(e.getMessage());
         } catch (Exception e) {
+            System.out.println(e.getClass());
             throw new RuntimeException("An error has occurred when making a query to API");
+        }
+    }
+
+    private void fetchMarketChart(JsonArray jsonArray) {
+        int ctr = 0;
+        System.out.println(jsonArray.size());
+        while (ctr < jsonArray.size() && ctr < MAX_RESULTS) {
+            JsonObject current = jsonArray.get(ctr++).getAsJsonObject();
+            if (current.get("type_is_crypto").getAsInt() != 1 || !current.has("price_usd")
+                || Double.compare(current.get("price_usd").getAsDouble(), MINIMUM_PRICE_FOR_ONE) < 0
+                || Double.compare(current.get("price_usd").getAsDouble(), MAXIMUM_PRICE_FOR_ONE) > 0) {
+                jsonArray.remove(ctr--);
+                continue;
+            }
+            marketChart.put(current.get("asset_id").getAsString(),
+                Double.valueOf(current.get("price_usd").getAsDouble()));
+        }
+    }
+
+    private void handleResponseCode(int responseCode) throws FailedRequestException {
+        if (responseCode >= BAD_REQUEST_CODE && responseCode < INTERNET_SERVER_ERROR_CODE) {
+            throw new FailedRequestException("Could not fetch error because of a client side error");
+        } else if (responseCode >= INTERNET_SERVER_ERROR_CODE) {
+            throw new FailedRequestException("Could not fetch error because of a server side error");
         }
     }
 
