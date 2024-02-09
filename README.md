@@ -20,4 +20,4 @@ The Cryptocurrency Wallet Manager is a command-line tool designed for users to p
 ### Future improvements:
 
 - add admin system
-- update api calls
+- add password change

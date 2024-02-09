@@ -189,3 +189,12 @@ bg.sofia.uni.fmi.mjt.wallet.crypto.server.CryptocurrencyWalletServer.handleKey(C
 bg.sofia.uni.fmi.mjt.wallet.crypto.server.CryptocurrencyWalletServer.startServer(CryptocurrencyWalletServer.java:75)
 bg.sofia.uni.fmi.mjt.wallet.crypto.server.CryptocurrencyWalletServer.start(CryptocurrencyWalletServer.java:53)
 Main.main(Main.java:12)
+Feb 09, 2024 3:23:54 PM bg.sofia.uni.fmi.mjt.wallet.crypto.database.ServerLogger logError
+INFO: Client disconnected forcefully
+java.base/sun.nio.ch.SocketChannelImpl.throwConnectionReset(SocketChannelImpl.java:401)
+java.base/sun.nio.ch.SocketChannelImpl.read(SocketChannelImpl.java:434)
+bg.sofia.uni.fmi.mjt.wallet.crypto.server.CryptocurrencyWalletServer.getClientInput(CryptocurrencyWalletServer.java:126)
+bg.sofia.uni.fmi.mjt.wallet.crypto.server.CryptocurrencyWalletServer.handleKey(CryptocurrencyWalletServer.java:91)
+bg.sofia.uni.fmi.mjt.wallet.crypto.server.CryptocurrencyWalletServer.startServer(CryptocurrencyWalletServer.java:75)
+bg.sofia.uni.fmi.mjt.wallet.crypto.server.CryptocurrencyWalletServer.start(CryptocurrencyWalletServer.java:53)
+Main.main(Main.java:13)

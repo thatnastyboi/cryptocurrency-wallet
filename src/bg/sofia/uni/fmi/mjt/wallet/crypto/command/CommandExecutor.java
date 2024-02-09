@@ -1,6 +1,7 @@
 package bg.sofia.uni.fmi.mjt.wallet.crypto.command;
 
 import bg.sofia.uni.fmi.mjt.wallet.crypto.account.Account;
+import bg.sofia.uni.fmi.mjt.wallet.crypto.account.PasswordChecker;
 import bg.sofia.uni.fmi.mjt.wallet.crypto.database.Database;
 import bg.sofia.uni.fmi.mjt.wallet.crypto.database.ServerLogger;
 import bg.sofia.uni.fmi.mjt.wallet.crypto.exception.FailedRequestException;
@@ -95,6 +96,11 @@ public class CommandExecutor {
 
         if (database.getDatabase().contains(current)) {
             return ACCOUNT_WITH_SUCH_USERNAME_ALREADY_EXISTS;
+        }
+
+        String validPassword = PasswordChecker.validatePassword(password);
+        if (!validPassword.isBlank()) {
+            return validPassword;
         }
 
         Account newAccount = Account.register(username, password);
@@ -394,6 +400,8 @@ public class CommandExecutor {
         "Wrong password";
     private static final String SHUTTING_DOWN_MESSAGE =
         "Server was shut down";
+    private static final String VALID_PASSWORD =
+        "Password is valid";
     private static final String LOGGED_IN_SUCCESSFULLY =
         "Logged in successfully";
     private static final String LOGGED_OUT_SUCCESSFULLY =

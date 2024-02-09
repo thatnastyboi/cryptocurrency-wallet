@@ -7,7 +7,9 @@ public class Account {
     private final String username;
     private final String password;
     private final Wallet wallet;
+    private static final String VALID_PASSWORD = "Password is valid";
     private static final String DELIMITER = ";";
+
     public static Account register(String username, String password) {
         return new Account(username, password);
     }
@@ -22,6 +24,16 @@ public class Account {
         this.username = username;
         this.password = password;
         this.wallet = wallet;
+    }
+
+    public String validatePassword(String password) {
+        String result = PasswordChecker.validatePassword(password);
+
+        if (!result.isBlank()) {
+            return result;
+        }
+
+        return VALID_PASSWORD;
     }
 
     public String getUsername() {
