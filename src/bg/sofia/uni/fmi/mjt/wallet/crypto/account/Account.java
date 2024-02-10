@@ -5,7 +5,7 @@ import java.util.Objects;
 public class Account {
 
     private final String username;
-    private final String password;
+    private String password;
     private final Wallet wallet;
     private static final String VALID_PASSWORD = "Password is valid";
     private static final String DELIMITER = ";";
@@ -42,6 +42,10 @@ public class Account {
 
     public Wallet getWallet() {
         return this.wallet;
+    }
+
+    public void setPassword(String newPass) {
+        this.password = newPass;
     }
 
     public boolean passwordsMatch(String password) {

@@ -50,6 +50,7 @@ public class CommandExecutor {
             case LIST_OFFERINGS -> listOfferings(key);
             case BUY -> buy(command.arguments(), key);
             case SELL -> sell(command.arguments(), key);
+            case CHANGE_PASSWORD -> changePassword(command.arguments(), key);
             case GET_WALLET_SUMMARY -> getWalletSummary(key);
             case GET_WALLET_OVERALL_SUMMARY -> getWalletOverallSummary(key);
             case LOGOUT -> logout(key);
@@ -74,6 +75,7 @@ public class CommandExecutor {
             .append(LIST_OFFERINGS).append(HELP_LIST_OFFERINGS_MESSAGE).append(NEW_LINE)
             .append(BUY).append(HELP_BUY_MESSAGE).append(NEW_LINE)
             .append(SELL).append(HELP_SELL_MESSAGE).append(NEW_LINE)
+            .append(CHANGE_PASSWORD).append(HELP_CHANGE_PASSWORD_MESSAGE).append(NEW_LINE)
             .append(LOGOUT).append(HELP_LOGOUT_MESSAGE).append(NEW_LINE)
             .append(GET_WALLET_SUMMARY).append(HELP_GET_WALLET_SUMMARY_MESSAGE).append(NEW_LINE)
             .append(GET_WALLET_OVERALL_SUMMARY).append(HELP_GET_WALLET_OVERALL_SUMMARY_MESSAGE);
@@ -260,6 +262,34 @@ public class CommandExecutor {
         return String.format(ASSET_SOLD_SUCCESSFULLY, cryptoCode, soldFor);
     }
 
+    private String changePassword(String[] changePassData, SelectionKey key) {
+        if (key.attachment() == null) {
+            return NOT_LOGGED_IN_MESSAGE;
+        }
+
+        String oldPass = changePassData[0];
+        String newPass = changePassData[1];
+
+        Account current = (Account) key.attachment();
+
+        if (!current.passwordsMatch(oldPass)) {
+            return WRONG_PASSWORD_MESSAGE;
+        }
+
+        String validPassword = PasswordChecker.validatePassword(newPass);
+        if (!validPassword.isBlank()) {
+            return validPassword;
+        }
+
+        if (current.passwordsMatch(newPass)) {
+            return SAME_PASSWORD_MESSAGE;
+        }
+
+        current.setPassword(newPass);
+
+        return PASSWORD_CHANGED_SUCCESSFULLY;
+    }
+
     private String getWalletSummary(SelectionKey key) {
         if (key.attachment() == null) {
             return NOT_LOGGED_IN_MESSAGE;
@@ -348,6 +378,7 @@ public class CommandExecutor {
     private static final String LIST_OFFERINGS = "list-offerings";
     private static final String BUY = "buy";
     private static final String SELL = "sell";
+    private static final String CHANGE_PASSWORD = "change-password";
     private static final String GET_WALLET_SUMMARY = "get-wallet-summary";
     private static final String GET_WALLET_OVERALL_SUMMARY = "get-wallet-overall-summary";
     private static final String UNKNOWN_COMMAND = "unknown command";
@@ -361,6 +392,8 @@ public class CommandExecutor {
     private static final String HELP_LIST_OFFERINGS_MESSAGE = ": lists all assets available for purchase";
     private static final String HELP_BUY_MESSAGE = " <asset_id> <amount>: buy asset for desired quantity of money";
     private static final String HELP_SELL_MESSAGE = " <asset_id>: sell asset";
+    private static final String HELP_CHANGE_PASSWORD_MESSAGE =
+        " <old_pass> <new_pass>: change the password of the current account";
     private static final String HELP_GET_WALLET_SUMMARY_MESSAGE =
         ": gives information about wallet, namely current balance and currently possessed assets";
     private static final String HELP_GET_WALLET_OVERALL_SUMMARY_MESSAGE =
@@ -398,6 +431,8 @@ public class CommandExecutor {
         "You are trying to sell an asset that you do not possess";
     private static final String WRONG_PASSWORD_MESSAGE =
         "Wrong password";
+    static final String SAME_PASSWORD_MESSAGE =
+        "The new password is the same as the old one";
     private static final String SHUTTING_DOWN_MESSAGE =
         "Server was shut down";
     private static final String VALID_PASSWORD =
@@ -416,6 +451,8 @@ public class CommandExecutor {
         "Successfully purchased \"%s\" for \"%s\" dollars";
     private static final String ASSET_SOLD_SUCCESSFULLY =
         "Successfully sold \"%s\" for \"%s\" dollars";
+    private static final String PASSWORD_CHANGED_SUCCESSFULLY =
+        "Successfully changed password";
     private static final String NOT_YET_IMPLEMENTED =
         "Implementation not yet made";
 }

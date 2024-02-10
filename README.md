@@ -12,7 +12,8 @@ The Cryptocurrency Wallet Manager is a command-line tool designed for users to p
 - __deposit-money  {amount}__ - Deposits given amount of money in the wallet of the currently logged account.
 - __list-offerings__ - Lists every available for purchase cryptocurrency.
 - __buy  {asset_code}  {amount}__ - Purchases quantity of given cryptocurrency by given amount of money.
-- __sell  {asset_code}__ - Sells cryptocurrency available in the wallet of the currently logged account.
+- __sell  {asset_code}__ - Sells cryptocurrency with code asset_code available in the wallet of the currently logged account.
+- __change-password  {old_pass}  {new_pass}__ - Changes the password of the currently logged account to new_pass.
 - __get-wallet-summary__ - Shows information about the wallet of the currently logged account, including current balance, which cryptocurrency they have in their wallet, as well as their quantity.
 - __get-wallet-overall-summary__ - Shows information about the overall winnings of the currently logged account.
 - __shutdown__ - Shuts the server down.

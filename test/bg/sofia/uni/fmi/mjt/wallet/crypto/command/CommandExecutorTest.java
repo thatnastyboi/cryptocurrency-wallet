@@ -90,7 +90,7 @@ public class CommandExecutorTest {
 
     @Test
     void testRegisterSuccessful() {
-        String testInput = "register test1 test";
+        String testInput = "register test test1";
 
         doNothing().when(mockDatabase).updateData(any());
 
@@ -105,7 +105,7 @@ public class CommandExecutorTest {
 
     @Test
     void testRegisterWithInvalidNumberOfArgs() {
-        String testInput = "register test1 test2 test";
+        String testInput = "register test1 test2 test1";
 
         Command testRegisterCommand = CommandCreator.newCommand(testInput);
         String result = executor.execute(testRegisterCommand, mockKey);
@@ -117,8 +117,8 @@ public class CommandExecutorTest {
 
     @Test
     void testRegisterWhileLoggedIn() {
-        String testInput = "register test2 test";
-        Account account = new Account("test1", "test");
+        String testInput = "register test2 test1";
+        Account account = new Account("test1", "test1");
 
         when(mockKey.attachment()).thenReturn(account);
 
@@ -132,8 +132,8 @@ public class CommandExecutorTest {
 
     @Test
     void testRegisterWithAlreadyExistingUsername() {
-        String testInput = "register test1 test";
-        Account account = new Account("test1", "test");
+        String testInput = "register test1 test1";
+        Account account = new Account("test1", "test1");
 
         when(mockDatabase.getDatabase()).thenReturn(Set.of(account));
 
@@ -142,6 +142,21 @@ public class CommandExecutorTest {
 
         assertEquals("Account with such username already exists", result,
             "Expected account already exists message but was " + result);
+    }
+
+    @Test
+    void testRegisterWithInvalidPassword() {
+        String testInput = "register test1 test";
+
+        doNothing().when(mockDatabase).updateData(any());
+
+        assertNull(mockKey.attachment());
+
+        Command testRegisterCommand = CommandCreator.newCommand(testInput);
+        String result = executor.execute(testRegisterCommand, mockKey);
+
+        assertTrue(result.contains("try again"),
+            "Expected successful registration message but was " + result);
     }
 
     @Test
