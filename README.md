@@ -16,9 +16,9 @@ The Cryptocurrency Wallet Manager is a command-line tool designed for users to p
 - __change-password  {old_pass}  {new_pass}__ - Changes the password of the currently logged account to new_pass.
 - __get-wallet-summary__ - Shows information about the wallet of the currently logged account, including current balance, which cryptocurrency they have in their wallet, as well as their quantity.
 - __get-wallet-overall-summary__ - Shows information about the overall winnings of the currently logged account.
-- __shutdown__ - Shuts the server down.
+- __make-admin {acc_username}__ - Gives account with username {acc_username} admin rights (requires admin rights).
+- __shutdown__ - Shuts the server down (requires admin rights).
 
 ### Future improvements:
 
-- add admin system
-- add password change
+- Nothing new will be added, open to ideas :)

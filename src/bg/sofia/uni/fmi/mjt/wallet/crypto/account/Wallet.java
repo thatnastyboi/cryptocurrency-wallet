@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Wallet {
-    private static final int BALANCE_INDEX = 2;
-    private static final int FIRST_CRYPTO_INDEX = 3;
+    private static final int BALANCE_INDEX = 3;
+    private static final int FIRST_CRYPTO_INDEX = 4;
     private static final int WALLET_FROM_CSV_STEP = 3;
     private static final String NEW_LINE = System.lineSeparator();
 

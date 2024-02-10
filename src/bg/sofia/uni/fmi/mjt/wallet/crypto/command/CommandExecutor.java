@@ -54,7 +54,8 @@ public class CommandExecutor {
             case GET_WALLET_SUMMARY -> getWalletSummary(key);
             case GET_WALLET_OVERALL_SUMMARY -> getWalletOverallSummary(key);
             case LOGOUT -> logout(key);
-            case SHUTDOWN -> shutdown();
+            case SHUTDOWN -> shutdown(key);
+            case MAKE_ADMIN -> makeAdmin(command.arguments(), key);
             default -> UNKNOWN_COMMAND;
         };
     }
@@ -67,7 +68,6 @@ public class CommandExecutor {
             .append(LOGIN).append(HELP_LOGIN_MESSAGE).append(NEW_LINE)
             .append(REGISTER).append(HELP_REGISTER_MESSAGE).append(NEW_LINE)
             .append(DISCONNECT).append(HELP_DISCONNECT_MESSAGE).append(NEW_LINE)
-            .append(SHUTDOWN).append(HELP_SHUTDOWN_MESSAGE).append(NEW_LINE)
             .append(MESSAGE_SEPARATOR).append(NEW_LINE)
             .append(HELP_MESSAGE_LOGGED_IN_COMMANDS).append(NEW_LINE)
             .append(MESSAGE_SEPARATOR).append(NEW_LINE)
@@ -78,7 +78,10 @@ public class CommandExecutor {
             .append(CHANGE_PASSWORD).append(HELP_CHANGE_PASSWORD_MESSAGE).append(NEW_LINE)
             .append(LOGOUT).append(HELP_LOGOUT_MESSAGE).append(NEW_LINE)
             .append(GET_WALLET_SUMMARY).append(HELP_GET_WALLET_SUMMARY_MESSAGE).append(NEW_LINE)
-            .append(GET_WALLET_OVERALL_SUMMARY).append(HELP_GET_WALLET_OVERALL_SUMMARY_MESSAGE);
+            .append(GET_WALLET_OVERALL_SUMMARY).append(HELP_GET_WALLET_OVERALL_SUMMARY_MESSAGE)
+            .append(HELP_MESSAGE_ADMIN_COMMANDS).append(NEW_LINE)
+            .append(MAKE_ADMIN).append(HELP_MAKE_ADMIN_MESSAGE).append(NEW_LINE)
+            .append(SHUTDOWN).append(HELP_SHUTDOWN_MESSAGE).append(NEW_LINE);
 
         return result.toString();
     }
@@ -87,13 +90,12 @@ public class CommandExecutor {
         if (key.attachment() != null) {
             return ALREADY_LOGGED_IN_MESSAGE;
         }
-        if (accountData.length != NUMBER_OF_ARGS_BUY_LOGIN_REGISTER) {
+        if (accountData.length != NUMBER_OF_ARGS_BUY_LOGIN_REGISTER_CHANGE) {
             return String.format(INVALID_ARGS_COUNT_MESSAGE_FORMAT, REGISTER, 2, REGISTER + HELP_REGISTER_MESSAGE);
         }
 
         String username = accountData[0];
         String password = accountData[1];
-
         Account current = findAccount(username);
 
         if (database.getDatabase().contains(current)) {
@@ -104,8 +106,11 @@ public class CommandExecutor {
         if (!validPassword.isBlank()) {
             return validPassword;
         }
-
         Account newAccount = Account.register(username, password);
+
+        if (database.getDatabase().isEmpty()) {
+            newAccount.changeAdminStatus();
+        }
         accounts.add(newAccount);
         database.updateData(accounts);
 
@@ -113,7 +118,7 @@ public class CommandExecutor {
     }
 
     private String login(String[] accountData, SelectionKey key) {
-        if (accountData.length != NUMBER_OF_ARGS_BUY_LOGIN_REGISTER) {
+        if (accountData.length != NUMBER_OF_ARGS_BUY_LOGIN_REGISTER_CHANGE) {
             return String.format(INVALID_ARGS_COUNT_MESSAGE_FORMAT, LOGIN, 2, LOGIN + HELP_LOGIN_MESSAGE);
         }
         if (key.attachment() != null) {
@@ -159,7 +164,7 @@ public class CommandExecutor {
         if (key.attachment() == null) {
             return NOT_LOGGED_IN_MESSAGE;
         }
-        if (moneyDeposit.length != NUMBER_OF_ARGS_DEPOSIT_SELL) {
+        if (moneyDeposit.length != NUMBER_OF_ARGS_DEPOSIT_SELL_ADMIN) {
             return String.format(INVALID_ARGS_COUNT_MESSAGE_FORMAT, DEPOSIT_MONEY, 1,
                 DEPOSIT_MONEY + HELP_DEPOSIT_MONEY_MESSAGE);
         }
@@ -197,7 +202,7 @@ public class CommandExecutor {
         if (key.attachment() == null) {
             return NOT_LOGGED_IN_MESSAGE;
         }
-        if (buyData.length != NUMBER_OF_ARGS_BUY_LOGIN_REGISTER) {
+        if (buyData.length != NUMBER_OF_ARGS_BUY_LOGIN_REGISTER_CHANGE) {
             return String.format(INVALID_ARGS_COUNT_MESSAGE_FORMAT, BUY, 2, BUY + HELP_BUY_MESSAGE);
         }
 
@@ -235,7 +240,7 @@ public class CommandExecutor {
         if (key.attachment() == null) {
             return NOT_LOGGED_IN_MESSAGE;
         }
-        if (sellData.length != NUMBER_OF_ARGS_DEPOSIT_SELL) {
+        if (sellData.length != NUMBER_OF_ARGS_DEPOSIT_SELL_ADMIN) {
             return String.format(INVALID_ARGS_COUNT_MESSAGE_FORMAT, SELL, 1, SELL + HELP_SELL_MESSAGE);
         }
 
@@ -265,6 +270,9 @@ public class CommandExecutor {
     private String changePassword(String[] changePassData, SelectionKey key) {
         if (key.attachment() == null) {
             return NOT_LOGGED_IN_MESSAGE;
+        }
+        if (changePassData.length != NUMBER_OF_ARGS_BUY_LOGIN_REGISTER_CHANGE) {
+            return String.format(INVALID_ARGS_COUNT_MESSAGE_FORMAT, CHANGE_PASSWORD, 2, HELP_CHANGE_PASSWORD_MESSAGE);
         }
 
         String oldPass = changePassData[0];
@@ -361,7 +369,43 @@ public class CommandExecutor {
         return disconnect(key);
     }
 
-    private String shutdown() {
+    private String makeAdmin(String[] makeAdminData, SelectionKey key) {
+        if (key.attachment() == null) {
+            return NOT_LOGGED_IN_MESSAGE;
+        }
+        if (makeAdminData.length != NUMBER_OF_ARGS_DEPOSIT_SELL_ADMIN) {
+            return String.format(INVALID_ARGS_COUNT_MESSAGE_FORMAT, MAKE_ADMIN, 1, HELP_MAKE_ADMIN_MESSAGE);
+        }
+
+        String username = makeAdminData[0];
+        Account toMakeAdmin = findAccount(username);
+
+        if (toMakeAdmin == null) {
+            return ACCOUNT_DOES_NOT_EXIST_MESSAGE;
+        }
+
+        Account current = (Account) key.attachment();
+
+        if (!current.getAdminStatus()) {
+            return NOT_AN_ADMIN_ACCOUNT_MESSAGE;
+        }
+
+        toMakeAdmin.changeAdminStatus();
+
+        return MADE_ADMIN_SUCCESSFULLY;
+    }
+
+    private String shutdown(SelectionKey key) {
+        if (key.attachment() == null) {
+            return NOT_LOGGED_IN_MESSAGE;
+        }
+
+        Account current = (Account) key.attachment();
+
+        if (!current.getAdminStatus()) {
+            return NOT_AN_ADMIN_ACCOUNT_MESSAGE;
+        }
+
         apiCall.shutdownScheduler();
         database.shutdownScheduler(accounts);
 
@@ -373,7 +417,6 @@ public class CommandExecutor {
     private static final String LOGIN = "login";
     private static final String LOGOUT = "logout";
     private static final String DISCONNECT = "disconnect";
-    private static final String SHUTDOWN = "shutdown";
     private static final String DEPOSIT_MONEY = "deposit-money";
     private static final String LIST_OFFERINGS = "list-offerings";
     private static final String BUY = "buy";
@@ -381,13 +424,17 @@ public class CommandExecutor {
     private static final String CHANGE_PASSWORD = "change-password";
     private static final String GET_WALLET_SUMMARY = "get-wallet-summary";
     private static final String GET_WALLET_OVERALL_SUMMARY = "get-wallet-overall-summary";
-    private static final String UNKNOWN_COMMAND = "unknown command";
+    private static final String SHUTDOWN = "shutdown";
+    private static final String MAKE_ADMIN = "make-admin";
+    private static final String UNKNOWN_COMMAND = "Unknown command";
     private static final String HELP_MESSAGE_COMMANDS = "LIST OF COMMANDS:";
     private static final String HELP_LOGIN_MESSAGE = " <username> <password>: logs in with existing account";
     private static final String HELP_LOGOUT_MESSAGE = " : logs out of account";
     private static final String HELP_REGISTER_MESSAGE = " <username> <password>: creates new account";
     private static final String HELP_MESSAGE_LOGGED_IN_COMMANDS =
         "THE FOLLOWING COMMANDS REQUIRE YOU TO BE LOGGED IN:";
+    private static final String HELP_MESSAGE_ADMIN_COMMANDS =
+        "THE FOLLOWING COMMANDS REQUIRE ADMIN ACCOUNT:";
     private static final String HELP_DEPOSIT_MONEY_MESSAGE = " <amount>: deposits amount in wallet";
     private static final String HELP_LIST_OFFERINGS_MESSAGE = ": lists all assets available for purchase";
     private static final String HELP_BUY_MESSAGE = " <asset_id> <amount>: buy asset for desired quantity of money";
@@ -402,15 +449,20 @@ public class CommandExecutor {
         ": disconnects you from the server";
     private static final String HELP_SHUTDOWN_MESSAGE =
         ": shuts down the server, disconnecting all other connected accounts";
+    private static final String HELP_MAKE_ADMIN_MESSAGE =
+        "<acc_username> : give account with username <acc_username> admin rights";
+
     private static final String MESSAGE_SEPARATOR =
         "--------------------------------------------------------------------------------------------------------";
     private static final String NEW_LINE = System.lineSeparator();
     private static final String INVALID_ARGS_COUNT_MESSAGE_FORMAT =
         "Invalid count of arguments: \"%s\" expects %d arguments. Example: \"%s\"";
-    public static final int NUMBER_OF_ARGS_DEPOSIT_SELL = 1;
-    public static final int NUMBER_OF_ARGS_BUY_LOGIN_REGISTER = 2;
+    public static final int NUMBER_OF_ARGS_DEPOSIT_SELL_ADMIN = 1;
+    public static final int NUMBER_OF_ARGS_BUY_LOGIN_REGISTER_CHANGE = 2;
     private static final String ALREADY_LOGGED_IN_MESSAGE =
         "You are already logged in, log out before using this command";
+    private static final String NOT_AN_ADMIN_ACCOUNT_MESSAGE =
+        "You don't have the rights to use this command";
     private static final String NOT_LOGGED_IN_MESSAGE =
         "You need to log in to use this command";
     private static final String ACCOUNT_ALREADY_IN_USAGE =
@@ -443,6 +495,8 @@ public class CommandExecutor {
         "Logged out successfully";
     private static final String DISCONNECTED_SUCCESSFULLY =
         "Disconnected successfully";
+    private static final String MADE_ADMIN_SUCCESSFULLY =
+        "Account was successfully given admin rights";
     private static final String DEPOSITED_SUCCESSFULLY =
         "Deposited successfully";
     private static final String REGISTERED_SUCCESSFULLY =

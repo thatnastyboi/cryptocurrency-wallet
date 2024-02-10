@@ -20,8 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class DatabaseTest {
     private static final String TEST_USERS_INFO =
         """
-            test1;9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08;0.0;PLC;1406.3994687999493;50.0                                                                                          
-            test2;9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08;0.0;PLC;1406.3994687999493;50.0                                                                        
+            0;test1;9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08;0.0;PLC;1406.3994687999493;50.0                                                                                          
+            0;test2;9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08;0.0;PLC;1406.3994687999493;50.0                                                                        
                         """;
     private static final String TEST_OUTPUT_DIRECTORY = "test-database";
     private static final String TEST_DATABASE_FILE_NAME = "test-accounts.txt";
@@ -57,10 +57,10 @@ public class DatabaseTest {
             "Expected size of test database is 2, but was " + testDataSize);
 
         assertTrue(testData.contains(
-                Account.fromCSV("test1;9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08;0.0;PLC;1406.3994687999493;50.0")),
+                Account.fromCSV("0;test1;9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08;0.0;PLC;1406.3994687999493;50.0")),
             "Expected loaded data to contain account with name test1 but it did not");
         assertTrue(testData.contains(
-                Account.fromCSV("test2;9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08;0.0;PLC;1406.3994687999493;50.0")),
+                Account.fromCSV("0;test2;9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08;0.0;PLC;1406.3994687999493;50.0")),
             "Expected loaded data to contain account with name test2 but it did not");
     }
 
@@ -68,7 +68,7 @@ public class DatabaseTest {
     void testSaveData() {
         Set<Account> updatedTestData = new HashSet<>(testData);
         updatedTestData.add(
-            Account.fromCSV("test3;9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08;0.0;PLC;1406.3994687999493;50.0"));
+            Account.fromCSV("0;test3;9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08;0.0;PLC;1406.3994687999493;50.0"));
 
         testDatabase.updateData(updatedTestData);
 
@@ -78,7 +78,7 @@ public class DatabaseTest {
             "Expected size of test database is 3, but was " + testDataSize);
 
         assertTrue(testData.contains(
-                Account.fromCSV("test3;9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08;0.0;PLC;1406.3994687999493;50.0")),
+                Account.fromCSV("0;test3;9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08;0.0;PLC;1406.3994687999493;50.0")),
             "Expected loaded data to contain account with name test3 but it did not");
     }
 
@@ -86,7 +86,7 @@ public class DatabaseTest {
     void testUpdateData() {
         Set<Account> updatedTestData = new HashSet<>(testData);
         updatedTestData.add(
-            Account.fromCSV("test3;9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08;0.0;PLC;1406.3994687999493;50.0"));
+            Account.fromCSV("0;test3;9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08;0.0;PLC;1406.3994687999493;50.0"));
 
         testDatabase.updateData(updatedTestData);
 
@@ -100,7 +100,7 @@ public class DatabaseTest {
     void testShutdownScheduler() {
         Set<Account> updatedTestData = new HashSet<>(testData);
         updatedTestData.add(
-            Account.fromCSV("test3;9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08;0.0;PLC;1406.3994687999493;50.0"));
+            Account.fromCSV("0;test3;9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08;0.0;PLC;1406.3994687999493;50.0"));
 
         testDatabase.shutdownScheduler(updatedTestData);
 
@@ -109,7 +109,7 @@ public class DatabaseTest {
         try {
             String fileContent = Files.readString(TEST_FILE_PATH, StandardCharsets.UTF_8);
             assertTrue(fileContent.contains(
-                "test3;9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08;0.0;PLC;1406.3994687999493;50.0"));
+                "0;test3;9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08;0.0;PLC;1406.3994687999493;50.0"));
         } catch (IOException e) {
             e.printStackTrace();
         }

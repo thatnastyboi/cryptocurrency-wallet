@@ -13,6 +13,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.nio.channels.SelectionKey;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -89,6 +90,20 @@ public class CommandExecutorTest {
     }
 
     @Test
+    void testLoginWithUnexistingAccount() {
+        String testInput = "login test2 test1";
+
+        when(mockDatabase.getDatabase()).thenReturn(new HashSet<>());
+        when(mockKey.attachment()).thenReturn(null);
+
+        Command testLoginCommand = CommandCreator.newCommand(testInput);
+        String result = executor.execute(testLoginCommand, mockKey);
+
+        assertTrue(result.contains("does not exist"),
+            "Expected account does not exist message but was " + result);
+    }
+
+    @Test
     void testRegisterSuccessful() {
         String testInput = "register test test1";
 
@@ -156,7 +171,7 @@ public class CommandExecutorTest {
         String result = executor.execute(testRegisterCommand, mockKey);
 
         assertTrue(result.contains("try again"),
-            "Expected successful registration message but was " + result);
+            "Expected invalid password message but was " + result);
     }
 
     @Test
@@ -229,7 +244,7 @@ public class CommandExecutorTest {
     @Test
     void testListOfferings() throws FailedRequestException {
         String testInput = "list-offerings";
-        Account account = new Account("test1", "test");
+        Account account = new Account("0;test1", "test");
 
         when(mockKey.attachment()).thenReturn(account);
 
@@ -243,8 +258,6 @@ public class CommandExecutorTest {
         Command testListOfferingsCommand = CommandCreator.newCommand(testInput);
         String result = executor.execute(testListOfferingsCommand, mockKey);
 
-        System.out.println(result);
-
         assertTrue(result.contains("DUMMY"),
             "Expected entry DUMMY but was not there");
         verify(mockApiCall, times(1)).getMarketChart();
@@ -253,7 +266,7 @@ public class CommandExecutorTest {
     @Test
     void testBuySuccessfully() throws FailedRequestException {
         String testInput = "buy DUMMY 50";
-        Account account = Account.fromCSV("test1;test;60.0");
+        Account account = Account.fromCSV("0;test1;test;60.0");
 
         when(mockKey.attachment()).thenReturn(account);
 
@@ -274,7 +287,7 @@ public class CommandExecutorTest {
     @Test
     void testBuyForInvalidAmountOfMoney() throws FailedRequestException {
         String testInput = "buy DUMMY -1";
-        Account account = Account.fromCSV("test1;test;60.0");
+        Account account = Account.fromCSV("0;test1;test;60.0");
 
         when(mockKey.attachment()).thenReturn(account);
 
@@ -295,7 +308,7 @@ public class CommandExecutorTest {
     @Test
     void testBuyForInvalidAsset() throws FailedRequestException {
         String testInput = "buy BUMPY 50";
-        Account account = Account.fromCSV("test1;test;60.0");
+        Account account = Account.fromCSV("0;test1;test;60.0");
 
         when(mockKey.attachment()).thenReturn(account);
 
@@ -316,7 +329,7 @@ public class CommandExecutorTest {
     @Test
     void testBuyWithInsufficientBalance() throws FailedRequestException {
         String testInput = "buy DUMMY 50";
-        Account account = Account.fromCSV("test1;test;40.0");
+        Account account = Account.fromCSV("0;test1;test;40.0");
 
         when(mockKey.attachment()).thenReturn(account);
 
@@ -338,7 +351,7 @@ public class CommandExecutorTest {
     void testBuyWhenNotLoggedIn() {
         String testInput = "buy DUMMY 50";
 
-        mockKey.attach(null);
+        when(mockKey.attachment()).thenReturn(null);
 
         Command testBuyCommand = CommandCreator.newCommand(testInput);
         String result = executor.execute(testBuyCommand, mockKey);
@@ -350,7 +363,7 @@ public class CommandExecutorTest {
     @Test
     void testBuyWithInvalidNumberOfArgs() {
         String testInput = "buy DUMMY 50 50";
-        Account account = Account.fromCSV("test1;test;40.0");
+        Account account = Account.fromCSV("0;test1;test;40.0");
 
         when(mockKey.attachment()).thenReturn(account);
 
@@ -364,7 +377,7 @@ public class CommandExecutorTest {
     @Test
     void testSellSuccessfully() throws FailedRequestException {
         String testInput = "sell DUMMY";
-        Account account = Account.fromCSV("test1;test;40.0;DUMMY;1;1");
+        Account account = Account.fromCSV("0;test1;test;40.0;DUMMY;1;1");
 
         when(mockKey.attachment()).thenReturn(account);
 
@@ -386,7 +399,7 @@ public class CommandExecutorTest {
     void testSellWhenNotLoggedIn() {
         String testInput = "sell DUMMY";
 
-        mockKey.attach(null);
+        when(mockKey.attachment()).thenReturn(null);
 
         Command testBuyCommand = CommandCreator.newCommand(testInput);
         String result = executor.execute(testBuyCommand, mockKey);
@@ -398,7 +411,7 @@ public class CommandExecutorTest {
     @Test
     void testSellWithInvalidNumberOfArgs() {
         String testInput = "sell DUMMY 50";
-        Account account = Account.fromCSV("test1;test;40.0;DUMMY;1;1");
+        Account account = Account.fromCSV("0;test1;test;40.0;DUMMY;1;1");
 
         when(mockKey.attachment()).thenReturn(account);
 
@@ -412,7 +425,7 @@ public class CommandExecutorTest {
     @Test
     void testSellInvalidAsset() throws FailedRequestException {
         String testInput = "sell BUMPY";
-        Account account = Account.fromCSV("test1;test;40.0;DUMMY;1;1");
+        Account account = Account.fromCSV("0;test1;test;40.0;DUMMY;1;1");
 
         when(mockKey.attachment()).thenReturn(account);
 
@@ -433,7 +446,7 @@ public class CommandExecutorTest {
     @Test
     void testSellNonPossessedAsset() throws FailedRequestException {
         String testInput = "sell DUMMY";
-        Account account = Account.fromCSV("test1;test;40.0");
+        Account account = Account.fromCSV("0;test1;test;40.0");
 
         when(mockKey.attachment()).thenReturn(account);
 
@@ -452,9 +465,37 @@ public class CommandExecutorTest {
     }
 
     @Test
+    void testChangePassword() {
+        String testInput = "change-password old1 new1";
+        Account account = new Account("test1", "old1");
+
+        when(mockKey.attachment()).thenReturn(account);
+
+        Command testChangePasswordCommand = CommandCreator.newCommand(testInput);
+        String result = executor.execute(testChangePasswordCommand, mockKey);
+
+        assertTrue(result.contains("changed"),
+            "Expected password changed successfully message but was " + result);
+    }
+
+    @Test
+    void testChangePasswordWithInvalidPassword() {
+        String testInput = "change-password old1 new";
+        Account account = new Account("test1", "old1");
+
+        when(mockKey.attachment()).thenReturn(account);
+
+        Command testChangePasswordCommand = CommandCreator.newCommand(testInput);
+        String result = executor.execute(testChangePasswordCommand, mockKey);
+
+        assertTrue(result.contains("try again"),
+            "Expected invalid password message but was " + result);
+    }
+
+    @Test
     void testGetWalletSummary() {
         String testInput = "get-wallet-summary";
-        Account account = Account.fromCSV("test1;test;40.0;DUMMY;1;1");
+        Account account = Account.fromCSV("0;test1;test;40.0;DUMMY;1;1");
 
         when(mockKey.attachment()).thenReturn(account);
 
@@ -471,7 +512,7 @@ public class CommandExecutorTest {
     void testGetWalletSummaryWhenNotLoggedIn() {
         String testInput = "get-wallet-summary";
 
-        mockKey.attach(null);
+        when(mockKey.attachment()).thenReturn(null);
 
         Command testWalletSummaryCommand = CommandCreator.newCommand(testInput);
         String result = executor.execute(testWalletSummaryCommand, mockKey);
@@ -481,9 +522,50 @@ public class CommandExecutorTest {
     }
 
     @Test
+    void testChangePasswordWithTheSamePassword() {
+        String testInput = "change-password old1 old1";
+        Account account = new Account("test1", "old1");
+
+        when(mockKey.attachment()).thenReturn(account);
+
+        Command testChangePasswordCommand = CommandCreator.newCommand(testInput);
+        String result = executor.execute(testChangePasswordCommand, mockKey);
+
+        assertTrue(result.contains("same as the"),
+            "Expected same password message but was " + result);
+    }
+
+    @Test
+    void testChangePasswordWithTheWrongOldPassword() {
+        String testInput = "change-password old2 new1";
+        Account account = new Account("test1", "old1");
+
+        when(mockKey.attachment()).thenReturn(account);
+
+        Command testChangePasswordCommand = CommandCreator.newCommand(testInput);
+        String result = executor.execute(testChangePasswordCommand, mockKey);
+
+        assertTrue(result.contains("Wrong password"),
+            "Expected wrong password message but was " + result);
+    }
+
+    @Test
+    void testChangePasswordWhenNotLoggedIn() {
+        String testInput = "change-password old2 new1";
+
+        when(mockKey.attachment()).thenReturn(null);
+
+        Command testChangePasswordCommand = CommandCreator.newCommand(testInput);
+        String result = executor.execute(testChangePasswordCommand, mockKey);
+
+        assertTrue(result.contains("You need to log in"),
+            "Expected not logged in message but was " + result);
+    }
+
+    @Test
     void testGetWalletOverallSummary() throws FailedRequestException {
         String testInput = "get-wallet-overall-summary";
-        Account account = Account.fromCSV("test1;test;40.0;DUMMY;1000;1");
+        Account account = Account.fromCSV("0;test1;test;40.0;DUMMY;1000;1");
 
         when(mockKey.attachment()).thenReturn(account);
 
@@ -505,7 +587,7 @@ public class CommandExecutorTest {
     void testGetWalletOverallSummaryWhenNotLoggedIn() {
         String testInput = "get-wallet-overall-summary";
 
-        mockKey.attach(null);
+        when(mockKey.attachment()).thenReturn(null);
 
         Command testWalletOverallSummaryCommand = CommandCreator.newCommand(testInput);
         String result = executor.execute(testWalletOverallSummaryCommand, mockKey);
@@ -517,7 +599,7 @@ public class CommandExecutorTest {
     @Test
     void testLogout() {
         String testInput = "logout";
-        Account account = Account.fromCSV("test1;test;40.0");
+        Account account = Account.fromCSV("0;test1;test;40.0");
 
         when(mockKey.attachment()).thenReturn(account);
 
@@ -532,7 +614,7 @@ public class CommandExecutorTest {
     void testLogoutWhenNotLoggedIn() {
         String testInput = "logout";
 
-        mockKey.attach(null);
+        when(mockKey.attachment()).thenReturn(null);
 
         Command testLogoutCommand = CommandCreator.newCommand(testInput);
         String result = executor.execute(testLogoutCommand, mockKey);
@@ -544,7 +626,7 @@ public class CommandExecutorTest {
     @Test
     void testDisconnectWhenLoggedIn() {
         String testInput = "disconnect";
-        Account account = Account.fromCSV("test1;test;40.0");
+        Account account = Account.fromCSV("0;test1;test;40.0");
 
         mockKey.attach(account);
 
@@ -559,7 +641,7 @@ public class CommandExecutorTest {
     void testDisconnectWhenNotLoggedIn() {
         String testInput = "disconnect";
 
-        mockKey.attach(null);
+        when(mockKey.attachment()).thenReturn(null);
 
         Command testDisconnectCommand = CommandCreator.newCommand(testInput);
         String result = executor.execute(testDisconnectCommand, mockKey);
@@ -569,8 +651,58 @@ public class CommandExecutorTest {
     }
 
     @Test
+    void testMakeAdmin() {
+        String testInput = "make-admin test2";
+        Account accountAdmin = Account.fromCSV("1;test1;test1;40.0");
+        Account accountToMakeAdmin = Account.fromCSV("0;test2;test1;20.0");
+
+        Set<Account> database = new HashSet<>();
+        database.add(accountAdmin);
+        database.add(accountToMakeAdmin);
+
+        when(mockDatabase.getDatabase()).thenReturn(database);
+        when(mockKey.attachment()).thenReturn(accountAdmin);
+
+        Command testMakeAdminCommand = CommandCreator.newCommand(testInput);
+        String result = executor.execute(testMakeAdminCommand, mockKey);
+
+        assertTrue(result.contains("admin rights"),
+            "Expected successfully made admin message but was " + result);
+    }
+
+    @Test
+    void testMakeAdminWhenNotLoggedIn() {
+        String testInput = "make-admin test2";
+
+        when(mockKey.attachment()).thenReturn(null);
+
+        Command testMakeAdminCommand = CommandCreator.newCommand(testInput);
+        String result = executor.execute(testMakeAdminCommand, mockKey);
+
+        assertEquals("You need to log in to use this command", result,
+            "Expected not logged in message but was " + result);
+    }
+
+    @Test
+    void testMakeAdminWithInvalidNumberOfArgs() {
+        String testInput = "make-admin test2 test2";
+        Account accountAdmin = Account.fromCSV("1;test1;test1;40.0");
+
+        when(mockKey.attachment()).thenReturn(accountAdmin);
+
+        Command testMakeAdminCommand = CommandCreator.newCommand(testInput);
+        String result = executor.execute(testMakeAdminCommand, mockKey);
+
+        assertTrue(result.contains("Invalid count of arguments"),
+            "Expected invalid count of arguments message but was " + result);
+    }
+
+    @Test
     void testShutdown() {
         String testInput = "shutdown";
+        Account account = Account.fromCSV("1;test1;test1;40.0");
+
+        when(mockKey.attachment()).thenReturn(account);
 
         doNothing().when(mockApiCall).shutdownScheduler();
         doNothing().when(mockDatabase).shutdownScheduler(any());
@@ -578,7 +710,51 @@ public class CommandExecutorTest {
         Command testShutdownCommand = CommandCreator.newCommand(testInput);
         String result = executor.execute(testShutdownCommand, mockKey);
 
-        assertEquals("Server was shut down", result,
+        assertTrue(result.contains("Server was shut down"),
             "Expected server shutdown message but was " + result);
+    }
+
+    @Test
+    void testShutdownWithNonAdminAccount() {
+        String testInput = "shutdown";
+        Account account = Account.fromCSV("0;test1;test1;40.0");
+
+        when(mockKey.attachment()).thenReturn(account);
+
+        doNothing().when(mockApiCall).shutdownScheduler();
+        doNothing().when(mockDatabase).shutdownScheduler(any());
+
+        Command testShutdownCommand = CommandCreator.newCommand(testInput);
+        String result = executor.execute(testShutdownCommand, mockKey);
+
+        assertTrue(result.contains("You don't have the rights"),
+            "Expected non-admin account message but was " + result);
+    }
+
+    @Test
+    void testShutdownWhenNotLoggedIn() {
+        String testInput = "shutdown";
+
+        when(mockKey.attachment()).thenReturn(null);
+
+        doNothing().when(mockApiCall).shutdownScheduler();
+        doNothing().when(mockDatabase).shutdownScheduler(any());
+
+        Command testShutdownCommand = CommandCreator.newCommand(testInput);
+        String result = executor.execute(testShutdownCommand, mockKey);
+
+        assertEquals("You need to log in to use this command", result,
+            "Expected not logged in message but was " + result);
+    }
+
+    @Test
+    void testUnknownCommand() {
+        String testInput = "dummy";
+
+        Command testUnknownCommand = CommandCreator.newCommand(testInput);
+        String result = executor.execute(testUnknownCommand, mockKey);
+
+        assertTrue(result.contains("Unknown command"),
+            "Expected unknown command message but was " + result);
     }
 }

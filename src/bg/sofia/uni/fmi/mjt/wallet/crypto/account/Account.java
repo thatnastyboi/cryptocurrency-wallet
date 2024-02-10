@@ -7,6 +7,7 @@ public class Account {
     private final String username;
     private String password;
     private final Wallet wallet;
+    private boolean isAdmin;
     private static final String VALID_PASSWORD = "Password is valid";
     private static final String DELIMITER = ";";
 
@@ -18,12 +19,14 @@ public class Account {
         this.username = username;
         this.password = PasswordHasher.hashString(password);
         this.wallet = new Wallet();
+        this.isAdmin = false;
     }
 
-    private Account(String username, String password, Wallet wallet) {
+    private Account(String username, String password, Wallet wallet, boolean isAdmin) {
         this.username = username;
         this.password = password;
         this.wallet = wallet;
+        this.isAdmin = isAdmin;
     }
 
     public String validatePassword(String password) {
@@ -44,8 +47,16 @@ public class Account {
         return this.wallet;
     }
 
+    public boolean getAdminStatus() {
+        return this.isAdmin;
+    }
+
     public void setPassword(String newPass) {
         this.password = newPass;
+    }
+
+    public void changeAdminStatus() {
+        isAdmin = !isAdmin;
     }
 
     public boolean passwordsMatch(String password) {
@@ -59,13 +70,18 @@ public class Account {
     public static Account fromCSV(String line) {
         String[] tokens = line.split(DELIMITER);
 
-        return new Account(tokens[0], tokens[1], Wallet.fromCSV(tokens));
+        boolean isAdmin = (Integer.parseInt(tokens[0])) != 0;
+
+        return new Account(tokens[1], tokens[2], Wallet.fromCSV(tokens), isAdmin);
     }
 
     public String toCSV() {
         StringBuilder result = new StringBuilder();
 
-        result.append(username).append(DELIMITER)
+        int adminValue = isAdmin ? 1 : 0;
+
+        result.append(adminValue).append(DELIMITER)
+            .append(username).append(DELIMITER)
             .append(password);
 
         return result.append(wallet.toCSV()).toString();
