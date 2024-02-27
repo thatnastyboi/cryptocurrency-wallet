@@ -50,6 +50,8 @@ public class ApiCall {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             int responseCode = response.statusCode();
+            System.out.println(uriAll);
+            System.out.println(responseCode);
 
             handleResponseCode(responseCode);
 
@@ -72,10 +74,11 @@ public class ApiCall {
         System.out.println(jsonArray.size());
         while (ctr < jsonArray.size() && ctr < MAX_RESULTS) {
             JsonObject current = jsonArray.get(ctr++).getAsJsonObject();
+
             if (current.get("type_is_crypto").getAsInt() != 1 || !current.has("price_usd")
                 || Double.compare(current.get("price_usd").getAsDouble(), MINIMUM_PRICE_FOR_ONE) < 0
                 || Double.compare(current.get("price_usd").getAsDouble(), MAXIMUM_PRICE_FOR_ONE) > 0) {
-                jsonArray.remove(ctr--);
+                jsonArray.remove(ctr);
                 continue;
             }
             marketChart.put(current.get("asset_id").getAsString(),
